@@ -1,0 +1,9 @@
+c:\users\burletm\documents\visual studio 2015\Projects\FastD2I Reader\FastD2I Reader\bin\Debug\FastD2I Reader.dll
+c:\users\burletm\documents\visual studio 2015\Projects\FastD2I Reader\FastD2I Reader\bin\Debug\FastD2I Reader.pdb
+c:\users\burletm\documents\visual studio 2015\Projects\FastD2I Reader\FastD2I Reader\bin\Debug\FastD2I Reader.xml
+c:\users\burletm\documents\visual studio 2015\Projects\FastD2I Reader\FastD2I Reader\obj\Debug\FastD2I Reader.vbprojResolveAssemblyReference.cache
+c:\users\burletm\documents\visual studio 2015\Projects\FastD2I Reader\FastD2I Reader\obj\Debug\FastD2I_Reader.Resources.resources
+c:\users\burletm\documents\visual studio 2015\Projects\FastD2I Reader\FastD2I Reader\obj\Debug\FastD2I Reader.vbproj.GenerateResource.Cache
+c:\users\burletm\documents\visual studio 2015\Projects\FastD2I Reader\FastD2I Reader\obj\Debug\FastD2I Reader.dll
+c:\users\burletm\documents\visual studio 2015\Projects\FastD2I Reader\FastD2I Reader\obj\Debug\FastD2I Reader.xml
+c:\users\burletm\documents\visual studio 2015\Projects\FastD2I Reader\FastD2I Reader\obj\Debug\FastD2I Reader.pdb
