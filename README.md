@@ -12,15 +12,15 @@ This is based on the **2.10** version.
         MyReader.Dispose()
 ```
 
-# Normal Load **VS** Fast Load
+# Normal Load VS Fast Load
 
-Normal Load:
+**Normal Load:**
 
 ![Slow Load](/Screens/slowload.PNG)
 
 ![Slow Ram](/Screens/slowram.PNG)
 
-Fast Load:
+**Fast Load:**
 
 ![Fast Load](/Screens/fastload.PNG)
 
