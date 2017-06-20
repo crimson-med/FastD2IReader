@@ -11,3 +11,17 @@ This is based on the **2.10** version.
         MyReader.GetText(41903)
         MyReader.Dispose()
 ```
+
+# Normal Load **VS** Fast Load
+
+Normal Load:
+
+![Slow Load](/Screens/slowload.PNG)
+
+![Slow Ram](/Screens/slowram.PNG)
+
+Fast Load:
+
+![Fast Load](/Screens/fastload.PNG)
+
+![Fast Ram](/Screens/fastram.PNG)
