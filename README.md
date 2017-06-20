@@ -1,6 +1,6 @@
-# FastD2OReader
+# FastD2IReader
 
-Having reversed engineered the .d2o files from Dofus for fun, I decided to make a simple reader for them.
+Having reversed engineered the .d2i files from Dofus for fun, I decided to make a simple reader for them.
 
 This is based on the **2.10** version.
 
