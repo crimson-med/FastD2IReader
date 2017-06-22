@@ -25,3 +25,7 @@ This is based on the **2.10** version.
 ![Fast Load](/Screens/fastload.PNG)
 
 ![Fast Ram](/Screens/fastram.PNG)
+
+# Format D2I 2.10
+
+![Format D2I](/Screens/2-10-d2i.PNG)
