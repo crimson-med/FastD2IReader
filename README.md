@@ -16,15 +16,15 @@ This is based on the **2.10** version.
 
 **Normal Load:**
 
-![Slow Load](/Screens/slowload.PNG)
+![Slow Load](/Screens/sload.PNG)
 
-![Slow Ram](/Screens/slowram.PNG)
+![Slow Ram](/Screens/sram.PNG)
 
 **Fast Load:**
 
-![Fast Load](/Screens/fastload.PNG)
+![Fast Load](/Screens/fload.PNG)
 
-![Fast Ram](/Screens/fastram.PNG)
+![Fast Ram](/Screens/fram.PNG)
 
 # Format D2I 2.10
 
