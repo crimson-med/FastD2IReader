@@ -45,7 +45,11 @@ Public Class FastReader : Implements IDisposable
             'Store the current read index
             Dim temp As New Index
             temp.IStrKey = ReadInt()
+            temp.IDiaExist = ReadBool()
             temp.IStrIndex = ReadInt()
+            If temp.IDiaExist = True Then
+                temp.IDiaIndex = ReadInt()
+            End If
             'Add it to the list
             MyD2I.IndexList.Add(temp)
         End While
@@ -73,22 +77,14 @@ Public Class FastReader : Implements IDisposable
             'Store the current read index
             Dim temp As New Index
             temp.IStrKey = ReadInt()
+            'Check if Dia exists
+            temp.IDiaExist = ReadBool()
             temp.IStrIndex = ReadInt()
+            If temp.IDiaExist = True Then
+                temp.IDiaIndex = ReadInt()
+            End If
             'Add it to the list
             MyD2I.IndexList.Add(temp)
-        End While
-        'Get the ending data "Relic"
-        Dim inter As Integer = MyD2I.SizeOfD2I - MyD2I.SizeOfData - MyD2I.SizeOfIndex - 4
-        'Load ending data
-        While Br.BaseStream.Position < MyD2I.SizeOfD2I - 4
-            'Store the current read relic
-            Dim temp As New Relics
-            temp.StrIndex = Br.BaseStream.Position
-            temp.StrSize = ReadShort()
-            temp.Str = ReadUtf8(temp.StrSize)
-            temp.StrID = ReadInt()
-            'Add the relic to the list
-            MyD2I.RestOfFile.Add(temp)
         End While
     End Sub
 
@@ -115,18 +111,24 @@ Public Class FastReader : Implements IDisposable
         Return Result
     End Function
 
-    'Read 4 bytes to integer 32 (reversed for endian)
+    'Read 4 bytes to UInteger 32 (reversed for endian)
     Private Function ReadInt() As Integer
         Dim int32 As Byte() = Br.ReadBytes(4)
         int32 = int32.Reverse().ToArray()
         Return BitConverter.ToInt32(int32, 0)
     End Function
 
-    'Read 2 bytes to integer 16 (reversed for endian)
-    Private Function ReadShort() As Short
+    'Read 2 bytes to UInteger 16 (reversed for endian)
+    Private Function ReadShort() As UInt16
         Dim MyShort As Byte() = Br.ReadBytes(2)
         MyShort = MyShort.Reverse().ToArray()
         Return BitConverter.ToUInt16(MyShort, 0)
+    End Function
+
+    'Read 1 byte for Boolean
+    Private Function ReadBool() As Boolean
+        Dim result As Byte = Br.ReadBoolean
+        Return result
     End Function
 
     'Read X bytes to UTF-8
