@@ -6,3 +6,12 @@ c:\users\burletm\documents\visual studio 2015\Projects\FastD2I Reader\FastD2I Re
 c:\users\burletm\documents\visual studio 2015\Projects\FastD2I Reader\FastD2I Reader\obj\Release\FastD2I Reader.dll
 c:\users\burletm\documents\visual studio 2015\Projects\FastD2I Reader\FastD2I Reader\obj\Release\FastD2I Reader.xml
 c:\users\burletm\documents\visual studio 2015\Projects\FastD2I Reader\FastD2I Reader\obj\Release\FastD2I Reader.pdb
+C:\Users\burletm\Documents\GitHub\FastD2IReader\FastD2I Reader\FastD2I Reader\bin\Release\FastD2I Reader.dll
+C:\Users\burletm\Documents\GitHub\FastD2IReader\FastD2I Reader\FastD2I Reader\bin\Release\FastD2I Reader.pdb
+C:\Users\burletm\Documents\GitHub\FastD2IReader\FastD2I Reader\FastD2I Reader\bin\Release\FastD2I Reader.xml
+C:\Users\burletm\Documents\GitHub\FastD2IReader\FastD2I Reader\FastD2I Reader\obj\Release\FastD2I_Reader.Resources.resources
+C:\Users\burletm\Documents\GitHub\FastD2IReader\FastD2I Reader\FastD2I Reader\obj\Release\FastD2I Reader.vbproj.GenerateResource.Cache
+C:\Users\burletm\Documents\GitHub\FastD2IReader\FastD2I Reader\FastD2I Reader\obj\Release\FastD2I Reader.dll
+C:\Users\burletm\Documents\GitHub\FastD2IReader\FastD2I Reader\FastD2I Reader\obj\Release\FastD2I Reader.xml
+C:\Users\burletm\Documents\GitHub\FastD2IReader\FastD2I Reader\FastD2I Reader\obj\Release\FastD2I Reader.pdb
+C:\Users\burletm\Documents\GitHub\FastD2IReader\FastD2I Reader\FastD2I Reader\obj\Release\FastD2I Reader.vbprojResolveAssemblyReference.cache

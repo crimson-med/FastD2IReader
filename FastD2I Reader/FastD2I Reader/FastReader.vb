@@ -8,54 +8,30 @@ Public Class FastReader : Implements IDisposable
     Private Stream As Stream
     Private Br As BinaryReader
     Private IsFastLoad As Boolean
+    Private Pather As String
 
-    'Handle new instance creation
-    Public Sub New(ByVal D2IPath As String, Optional ByVal FastLoad As Boolean = False)
+    ''' <summary>
+    ''' Handles the creation of new reader
+    ''' </summary>
+    ''' <param name="D2IPath">Path to the .d2i file</param>
+    ''' <param name="FastLoad">Enable the fast load, by default it's set to True.</param>
+    ''' <remarks></remarks>
+    Public Sub New(ByVal D2IPath As String, Optional ByVal FastLoad As Boolean = True)
         'Assign fastload information so can be reused in GetText
         IsFastLoad = FastLoad
-        '
-        'To implement:
-        '/!\ for fast load shouldn't load file to variable but read from position only. /!\
-        '
-        'Load all file data to variable
-        Dim MyData() As Byte = File.ReadAllBytes(D2IPath)
-        'Initiate stream from the data 
-        Stream = New MemoryStream(MyData)
-        'Create the binary stream
-        Br = New BinaryReader(Stream)
-        'Chheck how to load all the data
+        'Assign path information so can be reused in GetText
+        Pather = D2IPath
+        'Slow loading if needed
         If IsFastLoad = False Then
+            ' Dim MyData() As Byte = File.ReadAllBytes(D2IPath)
+            ' Stream = New MemoryStream(MyData)
+            ' Br = New BinaryReader(Stream)
             LoadD2i()
-        Else
-            FastLoadD2I()
         End If
     End Sub
 
-    Private Sub FastLoadD2I()
-        'Get the total size
-        MyD2I.SizeOfD2I = Br.BaseStream.Length
-        'Get the data size
-        MyD2I.SizeOfData = ReadInt()
-        'Jump the data
-        Br.BaseStream.Position = MyD2I.SizeOfData
-        'Get indexes size
-        MyD2I.SizeOfIndex = ReadInt()
-        'Load only indexes
-        While Br.BaseStream.Position - MyD2I.SizeOfData < MyD2I.SizeOfIndex
-            'Store the current read index
-            Dim temp As New Index
-            temp.IStrKey = ReadInt()
-            temp.IDiaExist = ReadBool()
-            temp.IStrIndex = ReadInt()
-            If temp.IDiaExist = True Then
-                temp.IDiaIndex = ReadInt()
-            End If
-            'Add it to the list
-            MyD2I.IndexList.Add(temp)
-        End While
-    End Sub
-
     Private Sub LoadD2i()
+        Br = New BinaryReader(File.Open(Pather, FileMode.Open, FileAccess.Read))
         'Get the total size
         MyD2I.SizeOfD2I = Br.BaseStream.Length
         'Get the data size
@@ -86,36 +62,85 @@ Public Class FastReader : Implements IDisposable
             'Add it to the list
             MyD2I.IndexList.Add(temp)
         End While
+        Br.Dispose()
+        GC.Collect()
     End Sub
 
-    Public Function GetText(ByVal MyId As Integer) As DataD2I
-        'Declare result variable
-        Dim Result As New DataD2I
-        'Check which get method to use
+    ''' <summary>
+    ''' Fetch the text associated with the ID
+    ''' </summary>
+    ''' <param name="ToSearch">ID of the text to get</param>
+    ''' <param name="VersionDiacritique">Choose if you prefer the diacritical value or not, by default it's set to True.</param>
+    ''' <remarks></remarks>
+    Public Function GetText(Of T)(ByVal ToSearch As T, Optional ByVal VersionDiacritique As Boolean = False) As String
+        Dim MyId As UInt32
+        Dim result As New DataD2I
+        If GetType(T) = GetType(String) Then
+            MyId = Convert.ToUInt32(ToSearch)
+        ElseIf IsNumeric(ToSearch) Then
+            MyId = Val(ToSearch)
+        End If
         If IsFastLoad = False Then
-            'Get the pointer
-            Dim pointer As Integer = MyD2I.IndexList.Where(Function(n) n.IStrKey = MyId).First().IStrIndex
-            'Get the result from the pointer
-            Result = MyD2I.DataList.Where(Function(m) m.StrIndex = pointer).First()
+            If VersionDiacritique = True Then
+                Dim pointer As UInt32
+                Try
+                    pointer = MyD2I.IndexList.Where(Function(n) n.IStrKey = MyId And n.IDiaExist = True).First().IDiaIndex
+                Catch ex As Exception
+                    pointer = MyD2I.IndexList.Where(Function(n) n.IStrKey = MyId).First().IStrIndex
+                End Try
+
+                result.Str = MyD2I.DataList.Where(Function(m) m.StrIndex = pointer).First().Str
+            Else
+                Dim pointer As UInt32 = MyD2I.IndexList.Where(Function(n) n.IStrKey = MyId).First().IStrIndex
+                result.Str = MyD2I.DataList.Where(Function(m) m.StrIndex = pointer).First().Str
+            End If
         Else
-            'Get the pointer
-            Dim pointer As Integer = MyD2I.IndexList.Where(Function(n) n.IStrKey = MyId).First().IStrIndex
-            'Place the position
-            Br.BaseStream.Position = pointer
-            'Read the value
-            Result.StrIndex = pointer
-            Result.StrSize = ReadShort()
-            Result.Str = ReadUtf8(Result.StrSize)
+            Br = New BinaryReader(File.Open(Pather, FileMode.Open, FileAccess.Read))
+            MyD2I.SizeOfD2I = Br.BaseStream.Length
+            MyD2I.SizeOfData = ReadInt()
+            Br.BaseStream.Position = MyD2I.SizeOfData
+            MyD2I.SizeOfIndex = ReadInt()
+            While Br.BaseStream.Position - MyD2I.SizeOfData < MyD2I.SizeOfIndex
+                Dim temp As New Index
+                Dim temp2 As UInt32 = ReadInt()
+                If temp2 = MyId Then
+                    temp.IStrKey = temp2
+                    temp.IDiaExist = ReadBool()
+                    temp.IStrIndex = ReadInt()
+                    If temp.IDiaExist = True Then
+                        temp.IDiaIndex = ReadInt()
+                    Else
+                    End If
+                    Dim pointer As Integer
+                    If VersionDiacritique = True Then
+                        pointer = temp.IDiaIndex
+                    Else
+                        pointer = temp.IStrIndex
+                    End If
+                    Br.BaseStream.Position = pointer
+                    result.StrIndex = pointer
+                    result.StrSize = ReadShort()
+                    result.Str = ReadUtf8(result.StrSize)
+                    Exit While
+                Else
+                    temp.IDiaExist = ReadBool()
+                    temp.IStrIndex = ReadInt()
+                    If temp.IDiaExist = True Then
+                        temp.IDiaIndex = ReadInt()
+                    Else
+                    End If
+                End If
+            End While
         End If
         'Return the result
-        Return Result
+        Return result.Str
     End Function
 
     'Read 4 bytes to UInteger 32 (reversed for endian)
-    Private Function ReadInt() As Integer
+    Private Function ReadInt() As UInt32
         Dim int32 As Byte() = Br.ReadBytes(4)
         int32 = int32.Reverse().ToArray()
-        Return BitConverter.ToInt32(int32, 0)
+        Return BitConverter.ToUInt32(int32, 0)
     End Function
 
     'Read 2 bytes to UInteger 16 (reversed for endian)
@@ -132,7 +157,7 @@ Public Class FastReader : Implements IDisposable
     End Function
 
     'Read X bytes to UTF-8
-    Private Function ReadUtf8(ByVal MySize As Short) As String
+    Private Function ReadUtf8(ByVal MySize As UInt16) As String
         Dim buffer As Byte()
         buffer = Br.ReadBytes(MySize)
         Return Encoding.UTF8.GetString(buffer)
@@ -149,9 +174,17 @@ Public Class FastReader : Implements IDisposable
                 ' TODO: dispose managed state (managed objects).
             End If
             'Dispose reader on class dispose
-            Br.Dispose()
+            Try
+                Br.Dispose()
+            Catch ex As Exception
+
+            End Try
             'Dispose stream on class dispose
-            Stream.Dispose()
+            Try
+                Stream.Dispose()
+            Catch ex As Exception
+
+            End Try
             ' TODO: free unmanaged resources (unmanaged objects) and override Finalize() below.
             ' TODO: set large fields to null.
         End If

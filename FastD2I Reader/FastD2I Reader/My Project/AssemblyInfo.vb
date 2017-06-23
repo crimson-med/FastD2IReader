@@ -8,11 +8,11 @@ Imports System.Runtime.InteropServices
 
 ' Review the values of the assembly attributes
 
-<Assembly: AssemblyTitle("FastD2I Reader")> 
-<Assembly: AssemblyDescription("")> 
-<Assembly: AssemblyCompany("")> 
-<Assembly: AssemblyProduct("FastD2I Reader")> 
-<Assembly: AssemblyCopyright("Copyright ©  2017")> 
+<Assembly: AssemblyTitle("Fast D2I Reader")>
+<Assembly: AssemblyDescription("A fast and efficient d2i reader library")>
+<Assembly: AssemblyCompany("The Falcon")>
+<Assembly: AssemblyProduct("FastD2I Reader")>
+<Assembly: AssemblyCopyright("The Falcon Copyright ©  2017")>
 <Assembly: AssemblyTrademark("")> 
 
 <Assembly: ComVisible(False)>
