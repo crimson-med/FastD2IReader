@@ -1,4 +1,9 @@
-﻿'Main holder of the data
+﻿'--+------------------------------------+--
+'  |                                    |
+'  |           The Falcon               |
+'  |                                    |
+'--+------------------------------------+--
+'Main holder of the data
 Public Class FastD2I
     'Size of the whole file
     Public Property SizeOfD2I As Long

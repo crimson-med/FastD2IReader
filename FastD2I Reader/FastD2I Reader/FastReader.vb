@@ -2,6 +2,12 @@
 Imports System.Text
 Imports System.Linq
 
+'--+------------------------------------+--
+'  |                                    |
+'  |           The Falcon               |
+'  |                                    |
+'--+------------------------------------+--
+
 Public Class FastReader : Implements IDisposable
     'Gloabal Variables
     Private MyD2I As New FastD2I
@@ -75,62 +81,71 @@ Public Class FastReader : Implements IDisposable
     Public Function GetText(Of T)(ByVal ToSearch As T, Optional ByVal VersionDiacritique As Boolean = False) As String
         Dim MyId As UInt32
         Dim result As New DataD2I
+        result.Str = ""
         If GetType(T) = GetType(String) Then
             MyId = Convert.ToUInt32(ToSearch)
         ElseIf IsNumeric(ToSearch) Then
             MyId = Val(ToSearch)
         End If
         If IsFastLoad = False Then
-            If VersionDiacritique = True Then
-                Dim pointer As UInt32
-                Try
-                    pointer = MyD2I.IndexList.Where(Function(n) n.IStrKey = MyId And n.IDiaExist = True).First().IDiaIndex
-                Catch ex As Exception
-                    pointer = MyD2I.IndexList.Where(Function(n) n.IStrKey = MyId).First().IStrIndex
-                End Try
+            Try
+                If VersionDiacritique = True Then
+                    Dim pointer As UInt32
+                    Try
+                        pointer = MyD2I.IndexList.Where(Function(n) n.IStrKey = MyId And n.IDiaExist = True).First().IDiaIndex
+                    Catch ex As Exception
+                        pointer = MyD2I.IndexList.Where(Function(n) n.IStrKey = MyId).First().IStrIndex
+                    End Try
 
-                result.Str = MyD2I.DataList.Where(Function(m) m.StrIndex = pointer).First().Str
-            Else
-                Dim pointer As UInt32 = MyD2I.IndexList.Where(Function(n) n.IStrKey = MyId).First().IStrIndex
-                result.Str = MyD2I.DataList.Where(Function(m) m.StrIndex = pointer).First().Str
-            End If
+                    result.Str = MyD2I.DataList.Where(Function(m) m.StrIndex = pointer).First().Str
+                Else
+                    Dim pointer As UInt32 = MyD2I.IndexList.Where(Function(n) n.IStrKey = MyId).First().IStrIndex
+                    result.Str = MyD2I.DataList.Where(Function(m) m.StrIndex = pointer).First().Str
+                End If
+            Catch ex As Exception
+
+            End Try
+
         Else
             Br = New BinaryReader(File.Open(Pather, FileMode.Open, FileAccess.Read))
             MyD2I.SizeOfD2I = Br.BaseStream.Length
             MyD2I.SizeOfData = ReadInt()
             Br.BaseStream.Position = MyD2I.SizeOfData
             MyD2I.SizeOfIndex = ReadInt()
-            While Br.BaseStream.Position - MyD2I.SizeOfData < MyD2I.SizeOfIndex
-                Dim temp As New Index
-                Dim temp2 As UInt32 = ReadInt()
-                If temp2 = MyId Then
-                    temp.IStrKey = temp2
-                    temp.IDiaExist = ReadBool()
-                    temp.IStrIndex = ReadInt()
-                    If temp.IDiaExist = True Then
-                        temp.IDiaIndex = ReadInt()
+            Try
+                While Br.BaseStream.Position - MyD2I.SizeOfData < MyD2I.SizeOfIndex
+                    Dim temp As New Index
+                    Dim temp2 As UInt32 = ReadInt()
+                    If temp2 = MyId Then
+                        temp.IStrKey = temp2
+                        temp.IDiaExist = ReadBool()
+                        temp.IStrIndex = ReadInt()
+                        If temp.IDiaExist = True Then
+                            temp.IDiaIndex = ReadInt()
+                        Else
+                        End If
+                        Dim pointer As Integer
+                        If VersionDiacritique = True Then
+                            pointer = temp.IDiaIndex
+                        Else
+                            pointer = temp.IStrIndex
+                        End If
+                        Br.BaseStream.Position = pointer
+                        result.StrIndex = pointer
+                        result.StrSize = ReadShort()
+                        result.Str = ReadUtf8(result.StrSize)
+                        Exit While
                     Else
+                        temp.IDiaExist = ReadBool()
+                        temp.IStrIndex = ReadInt()
+                        If temp.IDiaExist = True Then
+                            temp.IDiaIndex = ReadInt()
+                        Else
+                        End If
                     End If
-                    Dim pointer As Integer
-                    If VersionDiacritique = True Then
-                        pointer = temp.IDiaIndex
-                    Else
-                        pointer = temp.IStrIndex
-                    End If
-                    Br.BaseStream.Position = pointer
-                    result.StrIndex = pointer
-                    result.StrSize = ReadShort()
-                    result.Str = ReadUtf8(result.StrSize)
-                    Exit While
-                Else
-                    temp.IDiaExist = ReadBool()
-                    temp.IStrIndex = ReadInt()
-                    If temp.IDiaExist = True Then
-                        temp.IDiaIndex = ReadInt()
-                    Else
-                    End If
-                End If
-            End While
+                End While
+            Catch ex As Exception
+            End Try
         End If
         'Return the result
         Return result.Str
@@ -162,6 +177,8 @@ Public Class FastReader : Implements IDisposable
         buffer = Br.ReadBytes(MySize)
         Return Encoding.UTF8.GetString(buffer)
     End Function
+
+
 
 
 #Region "IDisposable Support"
