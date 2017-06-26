@@ -151,6 +151,9 @@ Public Class FastReader : Implements IDisposable
         Return result.Str
     End Function
 
+    'no index
+    'size, str, pointer
+
     'Read 4 bytes to UInteger 32 (reversed for endian)
     Private Function ReadInt() As UInt32
         Dim int32 As Byte() = Br.ReadBytes(4)
