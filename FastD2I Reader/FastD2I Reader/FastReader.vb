@@ -17,142 +17,178 @@ Public Class FastReader : Implements IDisposable
     Private Pather As String
 
     ''' <summary>
-    ''' Handles the creation of new reader
+    ''' Handles the creation of new reader. Check the documentation if not sure how to use.
     ''' </summary>
     ''' <param name="D2IPath">Path to the .d2i file</param>
     ''' <param name="FastLoad">Enable the fast load, by default it's set to True.</param>
-    ''' <remarks></remarks>
+    ''' <remarks>Test</remarks>
     Public Sub New(ByVal D2IPath As String, Optional ByVal FastLoad As Boolean = True)
         'Assign fastload information so can be reused in GetText
         IsFastLoad = FastLoad
         'Assign path information so can be reused in GetText
         Pather = D2IPath
+        Br = New BinaryReader(File.Open(Pather, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+        MyD2I.SizeOfD2I = Br.BaseStream.Length
+        MyD2I.SizeOfData = ReadInt()
+        Br.BaseStream.Position = MyD2I.SizeOfData
+        MyD2I.SizeOfIndex = ReadInt()
+        Br.BaseStream.Position = Br.BaseStream.Position + MyD2I.SizeOfIndex
+        MyD2I.SizeOfUi = ReadInt()
         'Slow loading if needed
         If IsFastLoad = False Then
-            ' Dim MyData() As Byte = File.ReadAllBytes(D2IPath)
-            ' Stream = New MemoryStream(MyData)
-            ' Br = New BinaryReader(Stream)
             LoadD2i()
         End If
     End Sub
 
+#Region "Pre-Load Data"
     Private Sub LoadD2i()
-        Br = New BinaryReader(File.Open(Pather, FileMode.Open, FileAccess.Read))
-        'Get the total size
-        MyD2I.SizeOfD2I = Br.BaseStream.Length
-        'Get the data size
-        MyD2I.SizeOfData = ReadInt()
-        'Load the data
-        While Br.BaseStream.Position < MyD2I.SizeOfData
-            'Store the current data
-            Dim temp As New DataD2I
-            temp.StrIndex = Br.BaseStream.Position
-            temp.StrSize = ReadShort()
-            temp.Str = ReadUtf8(temp.StrSize)
-            'Add the data to the list
-            MyD2I.DataList.Add(temp)
-        End While
-        'Get indexes size
-        MyD2I.SizeOfIndex = ReadInt()
-        'Load indexes
+        'Dim timerload As New Stopwatch
+        'timerload.Start()
+        Br.BaseStream.Position = MyD2I.SizeOfData + 4
         While Br.BaseStream.Position - MyD2I.SizeOfData < MyD2I.SizeOfIndex
-            'Store the current read index
-            Dim temp As New Index
-            temp.IStrKey = ReadInt()
-            'Check if Dia exists
-            temp.IDiaExist = ReadBool()
-            temp.IStrIndex = ReadInt()
-            If temp.IDiaExist = True Then
-                temp.IDiaIndex = ReadInt()
+            Dim OldPos As Integer
+            Dim temp As New DataD2I
+            Dim StrID As UInt32 = ReadInt()
+            temp.HasDia = ReadBool()
+            Dim Pointer As UInt32 = ReadInt()
+            Dim DPointer As UInt32 = 0
+            OldPos = Br.BaseStream.Position
+            If temp.HasDia = True Then
+                DPointer = ReadInt()
+                OldPos = Br.BaseStream.Position
+                Br.BaseStream.Position = DPointer
+                temp.StrDia = ReadUtf8(ReadShort)
             End If
-            'Add it to the list
-            MyD2I.IndexList.Add(temp)
+            Br.BaseStream.Position = Pointer
+            temp.Str = ReadUtf8(ReadShort)
+            MyD2I.DataList.Add(StrID, temp)
+            MyD2I.IDList.Add(StrID)
+            Br.BaseStream.Position = OldPos
         End While
-        Br.Dispose()
+        'timerload.Stop()
+        'Console.WriteLine("Loaded Data in: " & timerload.ElapsedMilliseconds & "ms")
         GC.Collect()
     End Sub
+#End Region
+
+#Region "Get Text From ID"
 
     ''' <summary>
     ''' Fetch the text associated with the ID
     ''' </summary>
     ''' <param name="ToSearch">ID of the text to get</param>
-    ''' <param name="VersionDiacritique">Choose if you prefer the diacritical value or not, by default it's set to True.</param>
+    ''' <param name="VersionDiacritique">Choose if you prefer the diacritical value or not, by default it's set to False.</param>
     ''' <remarks></remarks>
     Public Function GetText(Of T)(ByVal ToSearch As T, Optional ByVal VersionDiacritique As Boolean = False) As String
         Dim MyId As UInt32
-        Dim result As New DataD2I
-        result.Str = ""
+        Dim Result As String = "No Result"
         If GetType(T) = GetType(String) Then
             MyId = Convert.ToUInt32(ToSearch)
         ElseIf IsNumeric(ToSearch) Then
             MyId = Val(ToSearch)
         End If
         If IsFastLoad = False Then
-            Try
-                If VersionDiacritique = True Then
-                    Dim pointer As UInt32
-                    Try
-                        pointer = MyD2I.IndexList.Where(Function(n) n.IStrKey = MyId And n.IDiaExist = True).First().IDiaIndex
-                    Catch ex As Exception
-                        pointer = MyD2I.IndexList.Where(Function(n) n.IStrKey = MyId).First().IStrIndex
-                    End Try
-
-                    result.Str = MyD2I.DataList.Where(Function(m) m.StrIndex = pointer).First().Str
-                Else
-                    Dim pointer As UInt32 = MyD2I.IndexList.Where(Function(n) n.IStrKey = MyId).First().IStrIndex
-                    result.Str = MyD2I.DataList.Where(Function(m) m.StrIndex = pointer).First().Str
-                End If
-            Catch ex As Exception
-
-            End Try
-
+            Result = GetSlowText(MyId, VersionDiacritique)
         Else
-            Br = New BinaryReader(File.Open(Pather, FileMode.Open, FileAccess.Read))
-            MyD2I.SizeOfD2I = Br.BaseStream.Length
-            MyD2I.SizeOfData = ReadInt()
-            Br.BaseStream.Position = MyD2I.SizeOfData
-            MyD2I.SizeOfIndex = ReadInt()
-            Try
-                While Br.BaseStream.Position - MyD2I.SizeOfData < MyD2I.SizeOfIndex
-                    Dim temp As New Index
-                    Dim temp2 As UInt32 = ReadInt()
-                    If temp2 = MyId Then
-                        temp.IStrKey = temp2
-                        temp.IDiaExist = ReadBool()
-                        temp.IStrIndex = ReadInt()
-                        If temp.IDiaExist = True Then
-                            temp.IDiaIndex = ReadInt()
-                        Else
-                        End If
-                        Dim pointer As Integer
-                        If VersionDiacritique = True Then
-                            pointer = temp.IDiaIndex
-                        Else
-                            pointer = temp.IStrIndex
-                        End If
-                        Br.BaseStream.Position = pointer
-                        result.StrIndex = pointer
-                        result.StrSize = ReadShort()
-                        result.Str = ReadUtf8(result.StrSize)
-                        Exit While
-                    Else
-                        temp.IDiaExist = ReadBool()
-                        temp.IStrIndex = ReadInt()
-                        If temp.IDiaExist = True Then
-                            temp.IDiaIndex = ReadInt()
-                        Else
-                        End If
-                    End If
-                End While
-            Catch ex As Exception
-            End Try
+            Result = GetFastText(MyId, VersionDiacritique)
         End If
-        'Return the result
-        Return result.Str
+        Return Result
     End Function
 
-    'no index
-    'size, str, pointer
+    Public Function GetSlowText(ByVal ToSearch As UInt32, Optional ByVal MyDia As Boolean = False) As String
+        'Dim timerget As New Stopwatch
+        'timerget.Start()
+        Dim Result As String = ""
+        If MyDia = True Then
+            Try
+                Result = MyD2I.DataList(ToSearch).getval(True)
+            Catch ex As Exception
+                Result = "No Result"
+            End Try
+        Else
+            Try
+                Result = MyD2I.DataList(ToSearch).getval(False)
+            Catch ex As Exception
+                Result = "No Result"
+            End Try
+        End If
+        'timerget.Stop()
+        'Console.WriteLine("Query: " & ToSearch & "  --  " & Result & "  --  " & "Time: " & timerget.ElapsedMilliseconds & "ms")
+        Return Result
+    End Function
+
+    Public Function GetFastText(ByVal ToSearch As UInt32, Optional ByVal MyDia As Boolean = False) As String
+        'Dim timerget As New Stopwatch
+        'timerget.Start()
+        Dim Result As String = ""
+        Br.BaseStream.Position = MyD2I.SizeOfData + 4
+        Try
+            While Br.BaseStream.Position - MyD2I.SizeOfData < MyD2I.SizeOfIndex
+                Dim temp As New DataD2I
+                Dim ReadID As UInt32 = ReadInt()
+                'implement cache process for future
+                temp.HasDia = ReadBool()
+                Dim Pointer As UInt32 = ReadInt()
+                Dim DPointer As UInt32
+                If temp.HasDia = True Then
+                    DPointer = ReadInt()
+                End If
+                If ToSearch = ReadID Then
+                    If temp.HasDia = True And MyDia = True Then
+                        Br.BaseStream.Position = DPointer
+                        Result = ReadUtf8(ReadShort)
+                        Exit While
+                    Else
+                        Br.BaseStream.Position = Pointer
+                        Result = ReadUtf8(ReadShort)
+                        Exit While
+                    End If
+                End If
+            End While
+        Catch ex As Exception
+        End Try
+        'timerget.stop()
+        'Console.WriteLine("Query: " & ToSearch & "  --  " & Result & "  --  " & "Time: " & timerget.ElapsedMilliseconds & "ms")
+        Return Result
+    End Function
+
+#End Region
+
+#Region "Get ui.messages"
+    Public Function GetUi(ByVal MySearch As String) As String
+        'Dim TimeUi As New Stopwatch
+        'TimeUi.Start()
+        Br.BaseStream.Position = MyD2I.SizeOfData + MyD2I.SizeOfIndex + 8
+        Dim UIResult As String = "No Result"
+        Try
+            While Br.BaseStream.Position < Br.BaseStream.Length
+                Dim ReadUI As String = ReadUtf8(ReadShort())
+                Dim UIPointer = ReadInt()
+                If String.Compare(MySearch, ReadUI, True) = 0 Then
+                    Br.BaseStream.Position = UIPointer
+                    UIResult = ReadUtf8(ReadShort())
+                    Exit While
+                End If
+            End While
+        Catch ex As Exception
+        End Try
+        'TimeUi.Stop()
+        'Console.WriteLine("Query: " & MySearch & "  --  " & UIResult & "  --  " & "Time: " & TimeUi.ElapsedMilliseconds & "ms")
+        Return UIResult
+    End Function
+
+    'LATER IMPLEMENTATION
+
+    'Public Function GetFastUi(ByVal MySearch As String) As String
+
+    'End Function
+
+    'Public Function GetSlowUi(ByVal MySearch As String) As String
+
+    'End Function
+#End Region
+
+#Region "Readers"
 
     'Read 4 bytes to UInteger 32 (reversed for endian)
     Private Function ReadInt() As UInt32
@@ -180,9 +216,7 @@ Public Class FastReader : Implements IDisposable
         buffer = Br.ReadBytes(MySize)
         Return Encoding.UTF8.GetString(buffer)
     End Function
-
-
-
+#End Region
 
 #Region "IDisposable Support"
     Private disposedValue As Boolean ' To detect redundant calls
@@ -226,4 +260,5 @@ Public Class FastReader : Implements IDisposable
         ' GC.SuppressFinalize(Me)
     End Sub
 #End Region
+
 End Class

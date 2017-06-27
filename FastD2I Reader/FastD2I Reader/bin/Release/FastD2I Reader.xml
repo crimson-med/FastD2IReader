@@ -28,14 +28,14 @@ FastD2I Reader
  </summary>
  <param name="D2IPath">Path to the .d2i file</param>
  <param name="FastLoad">Enable the fast load, by default it's set to True.</param>
- <remarks></remarks>
+ <remarks>Test</remarks>
 </member>
 <member name="M:FastD2I_Reader.FastReader.GetText``1(``0,System.Boolean)">
  <summary>
  Fetch the text associated with the ID
  </summary>
  <param name="ToSearch">ID of the text to get</param>
- <param name="VersionDiacritique">Choose if you prefer the diacritical value or not, by default it's set to True.</param>
+ <param name="VersionDiacritique">Choose if you prefer the diacritical value or not, by default it's set to False.</param>
  <remarks></remarks>
 </member>
 </members>

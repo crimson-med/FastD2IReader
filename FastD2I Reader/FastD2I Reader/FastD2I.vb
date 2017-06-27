@@ -10,23 +10,28 @@ Public Class FastD2I
     'Size of main data
     Public Property SizeOfData As UInt32
     'List of the data
-    Public Property DataList As New List(Of DataD2I)
+    Public Property DataList As New Dictionary(Of Integer, DataD2I)
+    Public Property IDList As New List(Of Integer)
     'Size of the indexes
     Public Property SizeOfIndex As UInt32
-    'List of the indexes
-    Public Property IndexList As New List(Of Index)
+    'Size of UI Index
+    Public Property SizeOfUi As UInt32
 End Class
 
 Public Class DataD2I
-    'Index of the String
-    Public Property StrIndex As UInt32
-    'Size of the String
-    Public Property StrSize As UInt16
-    'The String itself
-    Public Property Str As String
+    Public Property HasDia As Boolean
+    Public Property Str As String = ""
+    Public Property StrDia As String = ""
+    Function getval(ByVal GetDia As Boolean) As String
+        If HasDia = True And GetDia = True Then
+            Return StrDia
+        Else
+            Return Str
+        End If
+    End Function
 End Class
 
-Public Class Index
+Public Class UI
     'The Key of the string to find
     Public Property IStrKey As UInt32
     'The pointer to the string in the file
