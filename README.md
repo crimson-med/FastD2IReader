@@ -4,6 +4,8 @@ Having reversed engineered the .d2i files from Dofus for fun, I decided to make 
 
 This is based on the **2.10** version.
 
+There is now a TypeScript Version available: https://github.com/crimson-med/d2i-reader
+
 # How to use
 
 ```vb
